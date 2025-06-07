@@ -16,6 +16,7 @@ interface NoteDetailProps {
   allTags: any[];
   onEditToggle: () => void;
   fetchNotes: () => void;
+  setSelectedNote: (note: any | null) => void;
   onNoteDeleted?: (noteId: number) => void; // Optional callback when note is deleted
 }
 
@@ -31,6 +32,7 @@ const NoteDetail = ({
   allTags,
   onEditToggle,
   fetchNotes,
+  setSelectedNote,
   onNoteDeleted
 }: NoteDetailProps) => {
   const router = useRouter();
@@ -94,6 +96,26 @@ const NoteDetail = ({
       console.error('Error deleting note:', error);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleArchiveNote = async () => {
+    try {
+      const payload = {
+        archived: !note.archived // This toggles the current archived status
+      };
+      
+      await api.put(`/notes/${note.id}`, payload);
+      
+      // Refresh the notes list with the current archive filter
+      fetchNotes();
+      
+      // If we're archiving, deselect the note
+      if (!note.archived) {
+        setSelectedNote(null);
+      }
+    } catch (error) {
+      console.error('Error archiving note:', error);
     }
   };
 
@@ -220,10 +242,10 @@ const NoteDetail = ({
             >
               <ButtonDefault
                 variant="outlined"
-                onClick={onEditToggle}
+                onClick={handleArchiveNote}
                 sx={{ textTransform: 'none' }}
               >
-                Archive Note
+                {note.archived ? 'Unarchive Note' : 'Archive Note'}
               </ButtonDefault>
               <ButtonDefault
                 variant="outlined"

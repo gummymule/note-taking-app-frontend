@@ -36,6 +36,7 @@ interface Note {
   title: string;
   content: string;
   last_edited: string;
+  archived: boolean;
   tags: Tag[];
 }
 
@@ -62,15 +63,24 @@ const NoteList = () => {
   const [isNewNoteModalOpen, setIsNewNoteModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
   useEffect(() => {
     fetchNotes();
     fetchTags();
-  }, []);
+  }, [showArchived]);
 
   const fetchNotes = async () => {
-    const response = await api.get('/notes');
-    setNotes(response.data);
+    try {
+      const response = await api.get('/notes', {
+        params: {
+          archived: showArchived
+        }
+      });
+      setNotes(response.data);
+    } catch (error) {
+      console.error('Error fetching notes:', error);
+    }
   };
 
   const fetchTags = async () => {
@@ -124,8 +134,10 @@ const NoteList = () => {
     if (selectedNote) {
       const updatedNotes = await api.get('/notes');
       const updatedNote = updatedNotes.data.find((n: Note) => n.id === selectedNote.id);
-      if (updatedNote) {
+      if (updatedNote && !updatedNote.archived) {
         setSelectedNote(updatedNote);
+      } else {
+        setSelectedNote(null);
       }
     }
   };
@@ -147,20 +159,32 @@ const NoteList = () => {
               <Image src={"/logo.svg"} alt="Logo" width={100} height={100} style={{ objectFit: 'contain' }} />
             </ListItemButton>
             <ListItemButton 
-              onClick={() => setSelectedTag(null)} 
+              onClick={() => {
+                setSelectedTag(null);
+                setShowArchived(false);
+              }} 
               selected={!selectedTag}
               sx={{ pl: 3 }}
             >
               <HomeOutlinedIcon sx={{ mr: 1 }} />
               <ListItemText primary="All Notes" />
-              <Badge badgeContent={notes.length} color="primary" sx={{ mr: 1 }} />
+              <Badge badgeContent={notes.filter(n => !n.archived).length} color="primary" sx={{ mr: 1 }} />
             </ListItemButton>
             <ListItemButton 
-              onClick={() => console.log('View archived')}
+              onClick={() => {
+                setSelectedTag(null);
+                setShowArchived(true);
+              }}
+              selected={showArchived}
               sx={{ pl: 3 }}
             >
               <ArchiveOutlinedIcon sx={{ mr: 1 }} />
               <ListItemText primary="Archived Notes" />
+              <Badge 
+                badgeContent={notes.filter(n => n.archived).length} 
+                color="primary" 
+                sx={{ mr: 1 }} 
+              />
             </ListItemButton>
             <Divider />
             <ListItemText sx={{ pl: 3, mt: 2, mb: 1 }}>Tags</ListItemText>
@@ -307,6 +331,7 @@ const NoteList = () => {
                 allTags={allTags}
                 onEditToggle={() => setIsEditing(!isEditing)}
                 fetchNotes={handleNoteUpdated}
+                setSelectedNote={setSelectedNote}
                 onNoteDeleted={handleNoteDeleted}
               />
             ) : (
