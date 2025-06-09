@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import NoteList from './components/organism/forms/note-list';
 import { FormProvider, useForm } from 'react-hook-form';
 import LoadingSpinner from './components/atoms/loading/default';
+import { ModalGlobal } from './components/organism/modal/global';
 
 export default function Home() {
   const { user, isLoading } = useAuth(); // Added isLoading from AuthContext
@@ -33,6 +34,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
+      <ModalGlobal />
       <FormProvider {...methods}>
         <NoteList />
       </FormProvider> 

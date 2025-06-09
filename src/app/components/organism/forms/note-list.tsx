@@ -30,6 +30,7 @@ import {
 } from '@mui/icons-material';
 import ButtonDefault from '../../atoms/button/default';
 import Image from 'next/image';
+import { ModalLoadingUtil } from '@/helpers/modal';
 
 interface Note {
   id: number;
@@ -65,12 +66,15 @@ const NoteList = () => {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
 
+
   useEffect(() => {
     fetchNotes();
     fetchTags();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showArchived]);
 
   const fetchNotes = async () => {
+    ModalLoadingUtil.showModal();
     try {
       const response = await api.get('/notes', {
         params: {
@@ -78,14 +82,25 @@ const NoteList = () => {
         }
       });
       setNotes(response.data);
+      ModalLoadingUtil.hideModal();
     } catch (error) {
       console.error('Error fetching notes:', error);
+    } finally {
+      ModalLoadingUtil.hideModal();
     }
   };
 
   const fetchTags = async () => {
-    const response = await api.get('/tags');
-    setAllTags(response.data);
+    ModalLoadingUtil.showModal();
+    try {
+      const response = await api.get('/tags');
+      setAllTags(response.data);
+      ModalLoadingUtil.hideModal();
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+    } finally {
+      ModalLoadingUtil.hideModal();
+    }
   };
 
   const handleNoteClick = (note: Note) => {
@@ -163,8 +178,16 @@ const NoteList = () => {
                 setSelectedTag(null);
                 setShowArchived(false);
               }} 
-              selected={!selectedTag}
-              sx={{ pl: 3 }}
+              selected={!selectedTag && !showArchived}
+              sx={{ pl: 3,
+                ...( !selectedTag && !showArchived && {
+                  backgroundColor: 'primary.main',
+                  color: 'black',
+                  '& .MuiSvgIcon-root': {
+                    color: 'black',
+                  }
+                })
+              }}
             >
               <HomeOutlinedIcon sx={{ mr: 1 }} />
               <ListItemText primary="All Notes" />
@@ -176,7 +199,15 @@ const NoteList = () => {
                 setShowArchived(true);
               }}
               selected={showArchived}
-              sx={{ pl: 3 }}
+              sx={{ pl: 3,
+                ...( showArchived && {
+                  backgroundColor: 'primary.main',
+                  color: 'black',
+                  '& .MuiSvgIcon-root': {
+                    color: 'black',
+                  }
+                })
+              }}
             >
               <ArchiveOutlinedIcon sx={{ mr: 1 }} />
               <ListItemText primary="Archived Notes" />
@@ -207,7 +238,6 @@ const NoteList = () => {
           </List>
         </Box>
       </Paper>
-
       {/* Main Content Area */}
       <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden', flexDirection: 'column' }}>
         {/* Navigation Bar */}

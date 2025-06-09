@@ -9,6 +9,10 @@ import ButtonDefault from '../../atoms/button/default';
 import MultiSelectWithChips from '../../molecules/select/multi-select-with-chips';
 import api from '@/services/api';
 import { useRouter } from 'next/navigation';
+import ArchiveIcon from '@mui/icons-material/Archive';
+import UnarchiveIcon from '@mui/icons-material/Unarchive';
+import BorderColorIcon from '@mui/icons-material/BorderColor';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 interface NoteDetailProps {
   note: any;
@@ -244,6 +248,7 @@ const NoteDetail = ({
                 variant="outlined"
                 onClick={handleArchiveNote}
                 sx={{ textTransform: 'none' }}
+                startIcon={note.archived ? <UnarchiveIcon /> : <ArchiveIcon />}
               >
                 {note.archived ? 'Unarchive Note' : 'Archive Note'}
               </ButtonDefault>
@@ -251,12 +256,14 @@ const NoteDetail = ({
                 variant="outlined"
                 onClick={onEditToggle}
                 sx={{ textTransform: 'none' }}
+                startIcon={<BorderColorIcon />}
               >
                 Edit Note
               </ButtonDefault>
               <ButtonDefault
                 variant="outlined"
                 onClick={() => setDeleteDialogOpen(true)}
+                startIcon={<DeleteIcon />}
                 sx={{ 
                   textTransform: 'none',
                   color: 'error.main',

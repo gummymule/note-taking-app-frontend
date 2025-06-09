@@ -50,7 +50,7 @@ const ButtonDefault: React.FC<ButtonProps> = ({
       onClick={onClick}
       autoFocus={autoFocus}
     >
-      {children || <div className="font-sans text-[20px] font-medium">{label}</div>}
+      {children || <div style={{ fontSize: '20px', fontWeight: 500 }}>{label}</div>}
     </Button>
   );
 };
