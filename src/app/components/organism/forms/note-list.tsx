@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import NoteDetail from './note-detail';
@@ -30,7 +31,9 @@ import {
 } from '@mui/icons-material';
 import ButtonDefault from '../../atoms/button/default';
 import Image from 'next/image';
-import { ModalLoadingUtil } from '@/helpers/modal';
+import { ModalErrorUtil, ModalLoadingUtil } from '@/helpers/modal';
+import { useNotes, useTags } from '@/app/hooks/useNoteQueries';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Note {
   id: number;
@@ -57,64 +60,56 @@ const StyledListItem = styled(ListItem)(({ theme }) => ({
 }));
 
 const NoteList = () => {
-  const [notes, setNotes] = useState<Note[]>([]);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [allTags, setAllTags] = useState<Tag[]>([]);
   const [isNewNoteModalOpen, setIsNewNoteModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
 
+  const queryClient = useQueryClient();
+  
+  // Queries with ModalLoadingUtil integration
+  const { 
+    data: notes = [], 
+    isLoading: isLoadingNotes,
+    isError: isErrorNotes,
+    error: notesError 
+  } = useNotes(showArchived);
 
+  const { 
+    data: allTags = [], 
+    isLoading: isLoadingTags,
+    isError: isErrorTags,
+    error: tagsError 
+  } = useTags();
+
+  // Show loading modal when either query is loading
   useEffect(() => {
-    fetchNotes();
-    fetchTags();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showArchived]);
+    if (isLoadingNotes || isLoadingTags) {
+      ModalLoadingUtil.showModal();
+    }
+  }, [isLoadingNotes, isLoadingTags]);
 
-  const fetchNotes = async () => {
-    ModalLoadingUtil.showModal();
-    try {
-      const response = await api.get('/notes', {
-        params: {
-          archived: showArchived
-        }
-      });
-      setNotes(response.data);
-      ModalLoadingUtil.hideModal();
-    } catch (error) {
-      console.error('Error fetching notes:', error);
-    } finally {
+  // Hide loading when done (success or error)
+  useEffect(() => {
+    if (!isLoadingNotes && !isLoadingTags) {
       ModalLoadingUtil.hideModal();
     }
-  };
-
-  const fetchTags = async () => {
-    ModalLoadingUtil.showModal();
-    try {
-      const response = await api.get('/tags');
-      setAllTags(response.data);
-      ModalLoadingUtil.hideModal();
-    } catch (error) {
-      console.error('Error fetching tags:', error);
-    } finally {
-      ModalLoadingUtil.hideModal();
-    }
-  };
+  }, [isLoadingNotes, isLoadingTags]);
 
   const handleNoteClick = (note: Note) => {
     setSelectedNote(note);
     setIsEditing(false);
   };
 
-  const filteredNotes = notes.filter(note => {
+  const filteredNotes = notes.filter((note: { title: string; content: string; tags: any[]; }) => {
     const matchesSearch = searchQuery === '' || 
       note.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
       note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      note.tags.some(tag => tag.name.toLowerCase().includes(searchQuery.toLowerCase()));
+      note.tags.some((tag: { name: string; }) => tag.name.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    const matchesTag = selectedTag ? note.tags.some(tag => tag.name === selectedTag) : true;
+    const matchesTag = selectedTag ? note.tags.some((tag: { name: string; }) => tag.name === selectedTag) : true;
     
     return matchesSearch && matchesTag;
   });
@@ -126,36 +121,26 @@ const NoteList = () => {
     window.location.href = '/login';
   };
 
+  const handleNoteCreated = (newNote: Note) => {
+    queryClient.invalidateQueries({ queryKey: ['notes'] });
+    setSelectedNote(newNote);
+  };
+
+  const handleNoteUpdated = () => {
+    queryClient.invalidateQueries({ queryKey: ['notes'] });
+  };
+
   const handleNoteDeleted = (deletedNoteId: number) => {
-    // Remove the deleted note from the list
-    setNotes(notes.filter(note => note.id !== deletedNoteId));
-    
-    // If the deleted note was the selected one, clear the selection
+    queryClient.invalidateQueries({ queryKey: ['notes'] });
     if (selectedNote?.id === deletedNoteId) {
       setSelectedNote(null);
     }
   };
 
-  const handleNoteCreated = (newNote: Note) => {
-    setNotes([newNote, ...notes]);
-    setSelectedNote(newNote);
-  };
-
-  const handleNoteUpdated = async () => {
-    // Refresh the notes list
-    await fetchNotes();
-    
-    // Find and set the updated note as selected
-    if (selectedNote) {
-      const updatedNotes = await api.get('/notes');
-      const updatedNote = updatedNotes.data.find((n: Note) => n.id === selectedNote.id);
-      if (updatedNote && !updatedNote.archived) {
-        setSelectedNote(updatedNote);
-      } else {
-        setSelectedNote(null);
-      }
-    }
-  };
+  if (isErrorNotes || isErrorTags) {
+    ModalLoadingUtil.hideModal();
+    ModalErrorUtil.showModal(notesError?.message || tagsError?.message);
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'row', height: '100vh', width: '100vw' }}>
@@ -191,7 +176,7 @@ const NoteList = () => {
             >
               <HomeOutlinedIcon sx={{ mr: 1 }} />
               <ListItemText primary="All Notes" />
-              <Badge badgeContent={notes.filter(n => !n.archived).length} color="primary" sx={{ mr: 1 }} />
+              <Badge badgeContent={notes.filter((n: Note) => !n.archived).length} color="primary" sx={{ mr: 1 }} />
             </ListItemButton>
             <ListItemButton 
               onClick={() => {
@@ -212,14 +197,14 @@ const NoteList = () => {
               <ArchiveOutlinedIcon sx={{ mr: 1 }} />
               <ListItemText primary="Archived Notes" />
               <Badge 
-                badgeContent={notes.filter(n => n.archived).length} 
+                badgeContent={notes.filter((n: Note) => n.archived).length} 
                 color="primary" 
                 sx={{ mr: 1 }} 
               />
             </ListItemButton>
             <Divider />
             <ListItemText sx={{ pl: 3, mt: 2, mb: 1 }}>Tags</ListItemText>
-            {allTags.map(tag => (
+            {allTags.map((tag: Tag) => (
               <ListItemButton 
                 key={tag.id} 
                 onClick={() => setSelectedTag(tag.name)}
@@ -229,7 +214,7 @@ const NoteList = () => {
                 <LocalOfferOutlinedIcon sx={{ mr: 1 }} />
                 <ListItemText primary={tag.name} />
                 <Badge 
-                  badgeContent={notes.filter(n => n.tags.some(t => t.name === tag.name)).length} 
+                  badgeContent={notes.filter((n: Note) => n.tags.some(t => t.name === tag.name)).length} 
                   color="primary" 
                   sx={{ mr: 1 }}
                 />
@@ -310,7 +295,7 @@ const NoteList = () => {
                 </ButtonDefault>
               </ListItemButton>
               <List dense disablePadding>
-                {filteredNotes.map(note => (
+                {filteredNotes.map((note: Note) => (
                   <StyledListItem
                     key={note.id}
                     disablePadding

@@ -12,10 +12,10 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { FormProvider, useForm } from 'react-hook-form';
-import api from '@/services/api';
 import TextFieldDefault from '../../molecules/text-field/default';
 import TextEditor from '../../molecules/text-editor/default';
 import MultiSelectWithChips from '../../molecules/select/multi-select-with-chips';
+import { useCreateNote } from '@/app/hooks/useNoteMutations';
 
 interface NewNoteModalProps {
   isOpen: boolean;
@@ -39,21 +39,20 @@ const NewNoteModal = ({ isOpen, onClose, onNoteCreated, allTags }: NewNoteModalP
     formState: { errors },
   } = methods;
 
+  // Use the mutation hook
+  const { mutate: createNote, isPending: isSubmitting } = useCreateNote();
 
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-
-  const onSubmit = async (data: NoteFormData) => {
-    setIsSubmitting(true);
-    try {
-      const response = await api.post('/notes', data);
-      onNoteCreated(response.data);
-      reset();
-      onClose();
-    } catch (error) {
-      console.error('Error creating note:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
+  const onSubmit = (data: NoteFormData) => {
+    createNote(data, {
+      onSuccess: (createdNote) => {
+        onNoteCreated(createdNote);
+        reset();
+        onClose();
+      },
+      onError: (error) => {
+        console.error('Error creating note:', error);
+      }
+    });
   };
 
   const handleClose = () => {

@@ -17,7 +17,7 @@ interface ModalLoadingProps {
 export const ModalLoading: FC<ModalLoadingProps> = ({
   open,
   onClose,
-  description = "Mohon tunggu sebentar...",
+  description = "Please wait...",
 }) => {
   return (
     <Dialog

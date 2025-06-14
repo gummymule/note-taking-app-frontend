@@ -7,12 +7,12 @@ import TextEditor from '../../molecules/text-editor/default';
 import { Box, Chip, Paper, Typography, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import ButtonDefault from '../../atoms/button/default';
 import MultiSelectWithChips from '../../molecules/select/multi-select-with-chips';
-import api from '@/services/api';
 import { useRouter } from 'next/navigation';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import BorderColorIcon from '@mui/icons-material/BorderColor';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useArchiveNote, useDeleteNote, useUpdateNote } from '@/app/hooks/useNoteMutations';
 
 interface NoteDetailProps {
   note: any;
@@ -35,13 +35,16 @@ const NoteDetail = ({
   isEditing,
   allTags,
   onEditToggle,
-  fetchNotes,
   setSelectedNote,
   onNoteDeleted
 }: NoteDetailProps) => {
   const router = useRouter();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Mutation hooks
+  const updateNoteMutation = useUpdateNote();
+  const deleteNoteMutation = useDeleteNote();
+  const archiveNoteMutation = useArchiveNote();
 
   // Prepare tag options for SelectDefault
   const tagOptions = allTags.map(tag => ({
@@ -69,52 +72,40 @@ const NoteDetail = ({
   const onSubmit = async (data: NoteFormData) => {
     try {
       const payload = {
+        id: note.id,
         ...data,
-        tags: Array.isArray(data.tags) 
-        ? data.tags.map(tag => Number(tag)) 
-        : []
+        tags: Array.isArray(data.tags) ? data.tags.map(tag => Number(tag)) : []
       };
-
-      const response = await api.put(`/notes/${note.id}`, payload);
+      
+      await updateNoteMutation.mutateAsync(payload);
       onEditToggle();
       reset();
-      fetchNotes(); // This will refresh the notes list
-      return response.data; // Return the updated note
     } catch (error) {
       console.error('Error saving note:', error);
     }
   };
 
   const handleDeleteNote = async () => {
-    setIsDeleting(true);
     try {
-      await api.delete(`/notes/${note.id}`);
+      await deleteNoteMutation.mutateAsync(note.id);
       setDeleteDialogOpen(false);
       if (onNoteDeleted) {
         onNoteDeleted(note.id);
       } else {
-        // Default behavior if no callback is provided
-        router.push('/notes'); // Redirect to notes list
+        router.push('/notes');
       }
     } catch (error) {
       console.error('Error deleting note:', error);
-    } finally {
-      setIsDeleting(false);
     }
   };
 
   const handleArchiveNote = async () => {
     try {
-      const payload = {
-        archived: !note.archived // This toggles the current archived status
-      };
+      await archiveNoteMutation.mutateAsync({
+        id: note.id,
+        archived: !note.archived
+      });
       
-      await api.put(`/notes/${note.id}`, payload);
-      
-      // Refresh the notes list with the current archive filter
-      fetchNotes();
-      
-      // If we're archiving, deselect the note
       if (!note.archived) {
         setSelectedNote(null);
       }
@@ -123,14 +114,13 @@ const NoteDetail = ({
     }
   };
 
-  // Reset form when note changes
   useEffect(() => {
     reset({
       title: note.title,
       content: note.content,
       tags: note.tags.map((tag: any) => Number(tag.id))
     });
-  }, [fetchNotes, note, reset]);
+  }, [note, reset]);
 
   return (
     <Box sx={{ display: 'flex', flexGrow: 1, height: '100%' }}>
@@ -300,7 +290,7 @@ const NoteDetail = ({
           </ButtonDefault>
           <ButtonDefault 
             onClick={handleDeleteNote}
-            disabled={isDeleting}
+            disabled={deleteNoteMutation.isPending}
             sx={{
               backgroundColor: 'error.main',
               color: 'white',
@@ -309,7 +299,7 @@ const NoteDetail = ({
               },
             }}
           >
-            {isDeleting ? 'Deleting...' : 'Delete'}
+            {deleteNoteMutation.isPending ? 'Deleting...' : 'Delete'}
           </ButtonDefault>
         </DialogActions>
       </Dialog>
