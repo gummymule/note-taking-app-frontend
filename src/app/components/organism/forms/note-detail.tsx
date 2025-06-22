@@ -57,7 +57,6 @@ const NoteDetail = ({
     handleSubmit,
     reset,
     formState: { errors },
-    watch
   } = useForm<NoteFormData>({
     defaultValues: {
       title: note.title,
@@ -65,9 +64,6 @@ const NoteDetail = ({
       tags: note.tags.map((tag: any) => Number(tag.id))
     }
   });
-
-  const formData = watch();
-  console.log('formData', formData);
 
   const onSubmit = async (data: NoteFormData) => {
     try {
@@ -123,9 +119,22 @@ const NoteDetail = ({
   }, [note, reset]);
 
   return (
-    <Box sx={{ display: 'flex', flexGrow: 1, height: '100%' }}>
+    <Box sx={{ 
+      width: '100%', 
+      height: '100%',
+      p: 3,
+      overflow: 'auto'
+    }}>
       {isEditing ? (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-4">
+        <form 
+          onSubmit={handleSubmit(onSubmit)} 
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            gap: '16px'
+          }}
+        >
           <TextFieldDefault
             name="title"
             control={control}
@@ -133,7 +142,6 @@ const NoteDetail = ({
             variant="outlined"
             rules={{ required: 'Title is required' }}
             errors={errors.title?.message}
-            className="mb-4"
           />
           
           <TextEditor
@@ -141,7 +149,6 @@ const NoteDetail = ({
             control={control}
             label="Content"
             errors={errors.content?.message}
-            className="mb-4"
           />
           
           <div className="flex items-center gap-2">
@@ -154,31 +161,40 @@ const NoteDetail = ({
             />
           </div>
           
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'flex-end', 
+            gap: 2,
+            pt: 2
+          }}>
+            <ButtonDefault
+              variant="outlined"
               onClick={onEditToggle}
-              className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+              sx={{ textTransform: 'none' }}
             >
               Cancel
-            </button>
-            <button
+            </ButtonDefault>
+            <ButtonDefault
               type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              variant="contained"
+              sx={{ textTransform: 'none' }}
             >
               Save
-            </button>
-          </div>
+            </ButtonDefault>
+          </Box>
         </form>
       ) : (
-        <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', md: 'row' },
+          width: '100%',
+          height: '100%' 
+        }}>
           <Paper sx={{ 
-            width: 640, 
-            minWidth: 640,
-            display: 'flex', 
-            flexDirection: 'column',
-            borderRight: '1px solid rgba(0, 0, 0, 0.12)',
-            p: 3
+            flex: { xs: 1, md: 2 },
+            p: 3,
+            overflow: 'auto',
+            borderRight: '1px solid rgba(0, 0, 0, 0.12)'
           }}>
             {/* Header section with title and actions */}
             <Box 
@@ -215,16 +231,14 @@ const NoteDetail = ({
 
             {/* Note content section */}
             <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
-              <div dangerouslySetInnerHTML={{ __html: note.content }} />
+              <div className="note-content" dangerouslySetInnerHTML={{ __html: note.content }} />
             </Box>
           </Paper>
           <Paper sx={{ 
-            width: 460, 
-            minWidth: 460, 
-            display: 'flex', 
-            flexDirection: 'column',
-            borderRight: '1px solid rgba(0, 0, 0, 0.12)',
-            p: 3
+            flex: { xs: 0, md: 1 },
+            p: 3,
+            overflow: 'auto',
+            borderRight: '1px solid rgba(0, 0, 0, 0.12)'
           }}>
             {/* actions */}
             <Box 

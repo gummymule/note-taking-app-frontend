@@ -48,7 +48,7 @@ export const ModalGlobal: React.FC = () => {
   // Loading Modal
   const [modalLoadingProps, setModalLoadingProps] = useState<ModalLoadingProps>({
     open: false,
-    description: "Mohon tunggu sebentar...",
+    description: "Please wait...",
   });
   const modalLoadingRef = useRef<{ show: () => void; hide: () => void }>(null);
   const _closeModalLoading = () => setModalLoadingProps((prev) => ({ ...prev, open: false }));

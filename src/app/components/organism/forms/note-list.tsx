@@ -338,7 +338,7 @@ const NoteList = () => {
           </Paper>
 
           {/* Note Detail */}
-          <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
             {selectedNote ? (
               <NoteDetail
                 note={selectedNote}
