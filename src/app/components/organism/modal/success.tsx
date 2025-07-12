@@ -69,7 +69,7 @@ export const ModalSuccess: FC<ModalSuccessProps> = ({
           justifyContent: "center",
         }}
       >
-        <Image className="mx-auto justify-center py-3" src="/thumb-success-dialog.svg" alt="Success" />
+        <Image className="mx-auto justify-center py-3" src="/thumb-success-dialog.svg" alt="Success" width={120} height={120} />
         <div className="text-lg font-extrabold justify-self-center">{title}</div>
         <div className="text-center mt-4">{description}</div>
       </DialogContent>

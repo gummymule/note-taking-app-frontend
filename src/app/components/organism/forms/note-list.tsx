@@ -34,6 +34,7 @@ import Image from 'next/image';
 import { ModalErrorUtil, ModalLoadingUtil } from '@/helpers/modal';
 import { useNotes, useTags } from '@/app/hooks/useNoteQueries';
 import { useQueryClient } from '@tanstack/react-query';
+import LogoutIcon from '@mui/icons-material/Logout';
 
 interface Note {
   id: number;
@@ -263,9 +264,7 @@ const NoteList = () => {
                 onClick={handleLogout}
                 sx={{ color: 'text.primary', textTransform: 'none' }}
               >
-                <Typography>
-                  Log Out
-                </Typography>
+                <LogoutIcon sx={{ mr: 1 }} />
               </ButtonDefault>
             </Box>
           </Toolbar>

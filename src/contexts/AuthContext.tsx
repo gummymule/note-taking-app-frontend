@@ -10,6 +10,7 @@ interface AuthContextType {
   user: any;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, password_confirmation: string) => Promise<void>;
+  forgotPassword: (email: string, newPassword: string, confirmPassword: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -86,13 +87,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const forgotPassword = async (email: string, new_password: string, confirm_password: string) => {
+    try {
+      await api.post('/forgot-password', {
+        email,
+        new_password: new_password,
+        confirm_password: confirm_password,
+      });
+    } catch (error) {
+      console.error('Forgot password failed:', error);
+      throw error;
+    }
+  };
+
+
   const logout = () => {
     clearAuth();
     router.push('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, register, forgotPassword, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

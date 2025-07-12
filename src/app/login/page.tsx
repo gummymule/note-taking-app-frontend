@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Box, Button, Typography, Link } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import TextFieldDefault from '../components/molecules/text-field/default';
+import Image from 'next/image';
 
 interface LoginFormData {
   email: string;
@@ -56,10 +57,12 @@ export default function Login() {
           gap: 3
         }}
       >
+        
         <Typography variant="h4" component="h1" textAlign="center" fontWeight="bold">
           Login
         </Typography>
-
+        <Image src={"/logo.svg"} alt="Logo" width={100} height={100} style={{ objectFit: 'contain', alignSelf: 'center' }} />
+        
         {error && (
           <Box
             sx={{
@@ -98,6 +101,21 @@ export default function Login() {
               variant="outlined"
               type="password"
             />
+
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              textAlign="left"
+              sx={{
+                cursor: 'pointer',
+                '&:hover': {
+                  textDecoration: 'underline',
+                },
+              }}
+              onClick={() => router.push('/forgot-password')}
+            >
+              Forgot password?
+            </Typography>
 
             <Button
               type="submit"
