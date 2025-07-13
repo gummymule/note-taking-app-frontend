@@ -10,7 +10,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { FC } from "react";
 import Image from "next/image";
 
-interface ModalErrorProps {
+interface ModalConfirmationProps {
   open: boolean;
   onClose: () => void;
   onConfirm: () => void;
@@ -18,15 +18,15 @@ interface ModalErrorProps {
   title?: string;
 }
 
-export const ModalError: FC<ModalErrorProps> = ({
+export const ModalConfirmation: FC<ModalConfirmationProps> = ({
   open,
   onClose,
   onConfirm,
   description,
-  title = "Oops!",
+  title = "Attention!",
   ...props
 }) => {
-  const handleButtonClick = () => {
+  const handleConfirmClick = () => {
     onConfirm();
     onClose();
   };
@@ -35,8 +35,8 @@ export const ModalError: FC<ModalErrorProps> = ({
     <Dialog
       open={open}
       onClose={onClose}
-      aria-labelledby="alert-dialog-title"
-      aria-describedby="alert-dialog-description"
+      aria-labelledby="confirmation-dialog-title"
+      aria-describedby="confirmation-dialog-description"
       sx={{
         "& .MuiDialog-container": {
           "& .MuiPaper-root": {
@@ -50,7 +50,7 @@ export const ModalError: FC<ModalErrorProps> = ({
       }}
       {...props}
     >
-      <DialogTitle id="alert-dialog-title">
+      <DialogTitle id="confirmation-dialog-title">
         <IconButton
           aria-label="close"
           onClick={onClose}
@@ -71,12 +71,12 @@ export const ModalError: FC<ModalErrorProps> = ({
       >
         <Image
           className="mx-auto justify-center py-3"
-          src="/thumb-modal-error.svg"
-          alt="Error"
+          src="/thumb-dialog-warning.svg"
+          alt="Warning"
           width={120}
           height={120}
         />
-        <div className="text-lg font-extrabold justify-self-center text-red-600">{title}</div>
+        <div className="text-lg font-extrabold justify-self-center text-yellow-600">{title}</div>
         <div className="text-center mt-4">{description}</div>
       </DialogContent>
       <DialogActions
@@ -89,20 +89,37 @@ export const ModalError: FC<ModalErrorProps> = ({
         <Button
           sx={{
             padding: "8px 0",
-            backgroundColor: "#D32F2F", // red tone
+            backgroundColor: "#9E9E9E", // abu-abu untuk "Tidak"
             width: "100%",
             borderRadius: "5px",
             color: "#FFFFFF",
             border: "2px solid transparent",
             "&:hover": {
-              backgroundColor: "#B71C1C",
-              border: "2px solid #D32F2F",
+              backgroundColor: "#757575",
+              border: "2px solid #9E9E9E",
             },
           }}
-          onClick={handleButtonClick}
+          onClick={onClose}
+        >
+          No
+        </Button>
+        <Button
+          sx={{
+            padding: "8px 0",
+            backgroundColor: "#00529C", // biru untuk "Ya"
+            width: "100%",
+            borderRadius: "5px",
+            color: "#FFFFFF",
+            border: "2px solid transparent",
+            "&:hover": {
+              backgroundColor: "#003f7d",
+              border: "2px solid #00529C",
+            },
+          }}
+          onClick={handleConfirmClick}
           autoFocus
         >
-          Oke
+          Yes
         </Button>
       </DialogActions>
     </Dialog>

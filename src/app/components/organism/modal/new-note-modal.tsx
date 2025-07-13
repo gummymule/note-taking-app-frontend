@@ -7,7 +7,6 @@ import {
   DialogActions, 
   Button,
   IconButton,
-  CircularProgress,
   Box
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -16,6 +15,7 @@ import TextFieldDefault from '../../molecules/text-field/default';
 import TextEditor from '../../molecules/text-editor/default';
 import MultiSelectWithChips from '../../molecules/select/multi-select-with-chips';
 import { useCreateNote } from '@/app/hooks/useNoteMutations';
+import { ModalConfirmationUtil, ModalSuccessUtil } from '@/helpers/modal';
 
 interface NewNoteModalProps {
   isOpen: boolean;
@@ -40,20 +40,42 @@ const NewNoteModal = ({ isOpen, onClose, onNoteCreated, allTags }: NewNoteModalP
   } = methods;
 
   // Use the mutation hook
-  const { mutate: createNote, isPending: isSubmitting } = useCreateNote();
+  const createNoteMutation = useCreateNote();
 
   const onSubmit = (data: NoteFormData) => {
-    createNote(data, {
-      onSuccess: (createdNote) => {
-        onNoteCreated(createdNote);
-        reset();
-        onClose();
-      },
-      onError: (error) => {
-        console.error('Error creating note:', error);
+    ModalConfirmationUtil.showModal(
+      'Are you sure you want to create this note?',
+      async () => {
+        ModalConfirmationUtil.hideModal();
+        try {
+          const payload = {
+            ...data,
+            tags: Array.isArray(data.tags) ? data.tags.map(tag => Number(tag)) : []
+          };
+
+          await createNoteMutation.mutateAsync(payload, {
+            onSuccess: (createdNote) => {
+              ModalSuccessUtil.showModal(
+                'Note created successfully!',
+                () => {
+                  ModalSuccessUtil.hideModal();
+                  onNoteCreated(createdNote);
+                  reset();
+                  onClose();
+                }
+              );
+            },
+            onError: (error) => {
+              console.error('Error creating note:', error);
+            }
+          });
+        } catch (error) {
+          console.error('Unhandled error:', error);
+        }
       }
-    });
+    );
   };
+
 
   const handleClose = () => {
     reset();
@@ -139,11 +161,9 @@ const NewNoteModal = ({ isOpen, onClose, onNoteCreated, allTags }: NewNoteModalP
           type="submit"
           variant="contained"
           onClick={handleSubmit(onSubmit)}
-          disabled={isSubmitting}
           sx={{ borderRadius: 1 }}
-          startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
         >
-          {isSubmitting ? 'Creating...' : 'Create Note'}
+          Create Note
         </Button>
       </DialogActions>
     </Dialog>

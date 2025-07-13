@@ -2,8 +2,9 @@
 import React, { useEffect, useImperativeHandle, useRef, useState } from "react";
 import { ModalSuccess } from "./success";
 import { ModalLoading } from "./loading"; // make sure this exists
-import { ModalSuccessUtil, ModalLoadingUtil, ModalErrorUtil } from "@/helpers/modal";
+import { ModalSuccessUtil, ModalLoadingUtil, ModalErrorUtil, ModalConfirmationUtil } from "@/helpers/modal";
 import { ModalError } from "./error";
+import { ModalConfirmation } from "./confirmation";
 
 interface ModalLoadingProps {
   open: boolean;
@@ -19,6 +20,13 @@ interface ModalSuccessProps {
 }
 
 interface ModalErrorProps {
+  open: boolean;
+  description: string;
+  onConfirm: () => void;
+  title?: string;
+}
+
+interface ModalConfirmationProps {
   open: boolean;
   description: string;
   onConfirm: () => void;
@@ -84,7 +92,7 @@ export const ModalGlobal: React.FC = () => {
     open: false,
     description: "",
     onConfirm: () => {},
-    title: "Yeay!",
+    title: "Oops!",
   });
   const modalErrorRef = useRef<{ show: (...args: any[]) => void; hide: () => void }>(null);
   const _closeModalError = () => setModalErrorProps((prev) => ({ ...prev, open: false }));
@@ -95,9 +103,30 @@ export const ModalGlobal: React.FC = () => {
         open: true,
         description: message,
         onConfirm,
-        title: title || "Yeay!",
+        title: title || "Oops!",
       }),
     onHide: _closeModalError,
+  });
+
+  // Confirmation Modal
+  const [modalConfirmationProps, setModalConfirmationProps] = useState<ModalConfirmationProps>({
+    open: false,
+    description: "",
+    onConfirm: () => {},
+    title: "Attention!",
+  });
+  const modalConfirmationRef = useRef<{ show: (...args: any[]) => void; hide: () => void }>(null);
+  const _closeModalConfirmation = () => setModalConfirmationProps((prev) => ({ ...prev, open: false }));
+
+  useRegisterModal(ModalConfirmationUtil, modalConfirmationRef, {
+    onShow: (message: string, onConfirm: () => void, title?: string) =>
+      setModalConfirmationProps({
+        open: true,
+        description: message,
+        onConfirm,
+        title: title || "Attention!",
+      }),
+    onHide: _closeModalConfirmation,
   });
 
   return (
@@ -105,6 +134,7 @@ export const ModalGlobal: React.FC = () => {
       <ModalLoading onClose={_closeModalLoading} {...modalLoadingProps} />
       <ModalSuccess onClose={_closeModalSuccess} {...modalSuccessProps} />
       <ModalError onClose={_closeModalError} {...modalErrorProps} />
+      <ModalConfirmation onClose={_closeModalConfirmation} {...modalConfirmationProps} />
     </>
   );
 };

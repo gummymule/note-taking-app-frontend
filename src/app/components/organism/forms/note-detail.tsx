@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { format } from 'date-fns';
 import { useForm } from 'react-hook-form';
 import TextFieldDefault from '../../molecules/text-field/default';
 import TextEditor from '../../molecules/text-editor/default';
-import { Box, Chip, Paper, Typography, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
+import { Box, Chip, Paper, Typography } from '@mui/material';
 import ButtonDefault from '../../atoms/button/default';
 import MultiSelectWithChips from '../../molecules/select/multi-select-with-chips';
 import { useRouter } from 'next/navigation';
@@ -13,6 +13,7 @@ import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import BorderColorIcon from '@mui/icons-material/BorderColor';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useArchiveNote, useDeleteNote, useUpdateNote } from '@/app/hooks/useNoteMutations';
+import { ModalConfirmationUtil, ModalSuccessUtil } from '@/helpers/modal';
 
 interface NoteDetailProps {
   note: any;
@@ -39,7 +40,7 @@ const NoteDetail = ({
   onNoteDeleted
 }: NoteDetailProps) => {
   const router = useRouter();
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  // const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Mutation hooks
   const updateNoteMutation = useUpdateNote();
@@ -66,48 +67,91 @@ const NoteDetail = ({
   });
 
   const onSubmit = async (data: NoteFormData) => {
-    try {
-      const payload = {
-        id: note.id,
-        ...data,
-        tags: Array.isArray(data.tags) ? data.tags.map(tag => Number(tag)) : []
-      };
-      
-      await updateNoteMutation.mutateAsync(payload);
-      onEditToggle();
-      reset();
-    } catch (error) {
-      console.error('Error saving note:', error);
-    }
+    ModalConfirmationUtil.showModal(
+      'Are you sure you want to save changes?',
+      async () => {
+        ModalConfirmationUtil.hideModal();
+        try {
+          const payload = {
+            id: note.id,
+            ...data,
+            tags: Array.isArray(data.tags) ? data.tags.map(tag => Number(tag)) : []
+          };
+          
+          await updateNoteMutation.mutateAsync(payload);
+          ModalSuccessUtil.showModal(
+            'Note updated successfully!',
+            () => {
+              ModalSuccessUtil.hideModal();
+              setSelectedNote(null);
+            }
+          );
+          onEditToggle();
+          reset();
+        } catch (error) {
+          console.error('Error saving note:', error);
+        }
+      }
+    );
   };
 
   const handleDeleteNote = async () => {
-    try {
-      await deleteNoteMutation.mutateAsync(note.id);
-      setDeleteDialogOpen(false);
-      if (onNoteDeleted) {
-        onNoteDeleted(note.id);
-      } else {
-        router.push('/notes');
+    ModalConfirmationUtil.showModal(
+      'Are you sure you want to delete this note?',
+      async () => {
+        ModalConfirmationUtil.hideModal();
+        try {
+          await deleteNoteMutation.mutateAsync(note.id);
+
+          ModalSuccessUtil.showModal(
+            'Note deleted successfully!',
+            () => {
+              ModalSuccessUtil.hideModal();
+              setSelectedNote(null);
+            }
+          );
+          
+          if (onNoteDeleted) {
+            onNoteDeleted(note.id);
+          } else {
+            router.push('/notes');
+          }
+        } catch (error) {
+          console.error('Error deleting note:', error);
+        }
       }
-    } catch (error) {
-      console.error('Error deleting note:', error);
-    }
+    );
   };
 
   const handleArchiveNote = async () => {
-    try {
-      await archiveNoteMutation.mutateAsync({
-        id: note.id,
-        archived: !note.archived
-      });
-      
-      if (!note.archived) {
-        setSelectedNote(null);
+    ModalConfirmationUtil.showModal(
+      `Are you sure you want to ${note.archived ? 'unarchive' : 'archive'} this note?`,
+      async () => {
+        ModalConfirmationUtil.hideModal();
+        try {
+          await archiveNoteMutation.mutateAsync({
+            id: note.id,
+            archived: !note.archived
+          });
+
+          ModalSuccessUtil.showModal(
+            `Note ${note.archived ? 'unarchived' : 'archived'} successfully!`,
+            () => {
+              ModalSuccessUtil.hideModal();
+              if (note.archived) {
+                setSelectedNote(null);
+              }
+            }
+          );
+          
+          if (!note.archived) {
+            setSelectedNote(null);
+          }
+        } catch (error) {
+          console.error('Error archiving note:', error);
+        }
       }
-    } catch (error) {
-      console.error('Error archiving note:', error);
-    }
+    );
   };
 
   useEffect(() => {
@@ -266,7 +310,7 @@ const NoteDetail = ({
               </ButtonDefault>
               <ButtonDefault
                 variant="outlined"
-                onClick={() => setDeleteDialogOpen(true)}
+                onClick={handleDeleteNote}
                 startIcon={<DeleteIcon />}
                 sx={{ 
                   textTransform: 'none',
@@ -285,38 +329,6 @@ const NoteDetail = ({
           </Paper>
         </Box>
       )}
-
-      {/* Delete confirmation dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        aria-labelledby="delete-dialog-title"
-      >
-        <DialogTitle id="delete-dialog-title">Delete Note</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this note? This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <ButtonDefault onClick={() => setDeleteDialogOpen(false)}>
-            Cancel
-          </ButtonDefault>
-          <ButtonDefault 
-            onClick={handleDeleteNote}
-            disabled={deleteNoteMutation.isPending}
-            sx={{
-              backgroundColor: 'error.main',
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'error.dark',
-              },
-            }}
-          >
-            {deleteNoteMutation.isPending ? 'Deleting...' : 'Delete'}
-          </ButtonDefault>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };
