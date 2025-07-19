@@ -86,6 +86,7 @@ export const ModalSuccess: FC<ModalSuccessProps> = ({
             backgroundColor: "#00529C",
             width: "100%",
             borderRadius: "5px",
+            textTransform: 'none',
             color: "#FFFFFF",
             border: "2px solid transparent", // Initial transparent border
             "&:hover": {
@@ -96,7 +97,7 @@ export const ModalSuccess: FC<ModalSuccessProps> = ({
           onClick={handleButtonClick}
           autoFocus
         >
-          Oke
+          Okay
         </Button>
       </DialogActions>
     </Dialog>

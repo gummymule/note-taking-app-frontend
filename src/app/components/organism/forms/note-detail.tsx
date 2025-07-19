@@ -317,9 +317,8 @@ const NoteDetail = ({
                   color: 'error.main',
                   borderColor: 'error.main',
                   '&:hover': {
-                    backgroundColor: 'error.light',
                     borderColor: 'error.dark',
-                    color: 'white'
+                    color: 'error.dark'
                   }
                 }}
               >

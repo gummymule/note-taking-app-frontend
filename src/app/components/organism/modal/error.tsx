@@ -92,6 +92,7 @@ export const ModalError: FC<ModalErrorProps> = ({
             backgroundColor: "#D32F2F", // red tone
             width: "100%",
             borderRadius: "5px",
+            textTransform: 'none',
             color: "#FFFFFF",
             border: "2px solid transparent",
             "&:hover": {
@@ -102,7 +103,7 @@ export const ModalError: FC<ModalErrorProps> = ({
           onClick={handleButtonClick}
           autoFocus
         >
-          Oke
+          Okay
         </Button>
       </DialogActions>
     </Dialog>

@@ -3,10 +3,10 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  CircularProgress,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { FC } from "react";
+import Image from "next/image";
 
 interface ModalLoadingProps {
   open: boolean;
@@ -62,7 +62,7 @@ export const ModalLoading: FC<ModalLoadingProps> = ({
           paddingBottom: "2rem",
         }}
       >
-        <CircularProgress color="primary" />
+        <Image src="/loading-dots.gif" alt="modal-loading" width={70} height={70} priority />
         <div className="text-center text-sm">{description}</div>
       </DialogContent>
     </Dialog>

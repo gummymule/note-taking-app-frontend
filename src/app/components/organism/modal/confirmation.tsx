@@ -92,6 +92,7 @@ export const ModalConfirmation: FC<ModalConfirmationProps> = ({
             backgroundColor: "#9E9E9E", // abu-abu untuk "Tidak"
             width: "100%",
             borderRadius: "5px",
+            textTransform: 'none',
             color: "#FFFFFF",
             border: "2px solid transparent",
             "&:hover": {
@@ -109,6 +110,7 @@ export const ModalConfirmation: FC<ModalConfirmationProps> = ({
             backgroundColor: "#00529C", // biru untuk "Ya"
             width: "100%",
             borderRadius: "5px",
+            textTransform: 'none',
             color: "#FFFFFF",
             border: "2px solid transparent",
             "&:hover": {
